@@ -1,0 +1,197 @@
+/* ===============================
+   GLOBAL STYLES
+=============================== */
+* {
+    box-sizing: border-box;
+    font-family: "Arial", sans-serif;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    background: radial-gradient(circle at top left, #f4f3ef, #eae6d8);
+    background-image: url('https://www.transparenttextures.com/patterns/gplay.png');
+    background-size: cover;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100vh;
+}
+
+/* ===============================
+   HEADER
+=============================== */
+.header {
+    width: 100%;
+    background: linear-gradient(to right, #0b4f30, #2f7a4d);
+    padding: 15px 0;
+    text-align: center;
+    color: white;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+}
+
+.header-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+}
+
+.logo {
+    width: 60px;
+    height: 60px;
+}
+
+.header-text h1 {
+    font-size: 18px;
+    font-weight: normal;
+    color: #f5f5dc;
+}
+
+/* ===============================
+   CONTENT
+=============================== */
+.content {
+    background: rgba(255, 255, 255, 0.9);
+    width: 90%;
+    max-width: 420px;
+    margin-top: 25px;
+    padding: 25px;
+    border-radius: 15px;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    backdrop-filter: blur(5px);
+}
+
+.verification-form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+label {
+    font-size: 14px;
+    text-align: left;
+    color: #2f5233;
+    font-weight: bold;
+}
+
+input {
+    padding: 10px;
+    border: 1px solid #b8b692;
+    border-radius: 6px;
+    outline: none;
+    font-size: 14px;
+    background: #fffef8;
+    transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+input:focus {
+    border-color: #bfa14a;
+    box-shadow: 0 0 6px rgba(191, 161, 74, 0.5);
+}
+
+/* ===============================
+   BUTTONS
+=============================== */
+.btn {
+    padding: 12px;
+    border: none;
+    border-radius: 25px;
+    color: white;
+    cursor: pointer;
+    font-size: 15px;
+    font-weight: bold;
+    transition: transform 0.2s, box-shadow 0.2s;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+}
+
+.btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.25);
+}
+
+.btn-main {
+    background: linear-gradient(145deg, #d4af37, #b9971e);
+    color: #fff;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.btn-secondary {
+    background: linear-gradient(145deg, #3a7a44, #4ea75c);
+    color: #fff8dc;
+}
+
+.samples-link {
+    font-size: 13px;
+    color: #2e7031;
+    text-decoration: none;
+    margin: 10px 0;
+    font-weight: bold;
+}
+
+.samples-link:hover {
+    text-decoration: underline;
+}
+
+/* ===============================
+   VERIFIED PAGE
+=============================== */
+.verified-content {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 70vh;
+}
+
+.verified-box {
+    background: rgba(255, 255, 255, 0.92);
+    padding: 40px 30px;
+    border-radius: 15px;
+    box-shadow: 0 0 25px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    max-width: 420px;
+    border-top: 6px solid #3e8e41;
+    backdrop-filter: blur(6px);
+}
+
+.verified-box h2 {
+    font-size: 24px;
+    color: #2e7031;
+    margin-bottom: 15px;
+    border-bottom: 3px solid #bfa14a;
+    display: inline-block;
+    padding-bottom: 5px;
+}
+
+.verified-box p {
+    font-size: 15px;
+    color: #3a3a3a;
+}
+
+/* ===============================
+   TABLE STYLE
+=============================== */
+.apostille-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+.apostille-table th,
+.apostille-table td {
+    text-align: left;
+    padding: 10px 12px;
+    border-bottom: 1px solid #e3e7ee;
+}
+
+.apostille-table th {
+    font-weight: bold;
+    color: #244b2b;
+    width: 45%;
+    background: #f2f7f3;
+}
+
+.apostille-table td {
+    color: #333;
+}

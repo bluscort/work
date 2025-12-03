@@ -1,13 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Admin Panel – Apostille</title>
-  <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Apostille Admin Panel</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-
   <header class="header">
     <div class="header-container">
       <div class="header-text">
@@ -16,172 +15,195 @@
     </div>
   </header>
 
-  <main class="content" style="max-width: 600px;">
+  <main class="content" style="max-width: 600px">
     <!-- Блок логина -->
     <div id="login-block">
-      <h2 style="margin-bottom:15px;color:#2f5233;">Admin login</h2>
+      <h2 style="margin-bottom: 15px; color: #2f5233">Admin login</h2>
 
       <label for="admin-email">Email</label>
-      <input type="email" id="admin-email" placeholder="admin@example.com">
+      <input type="email" id="admin-email" placeholder="admin@example.com" />
 
       <label for="admin-password">Password</label>
-      <input type="password" id="admin-password" placeholder="Enter password">
+      <input type="password" id="admin-password" placeholder="Enter password" />
 
       <button class="btn btn-main" id="login-btn">Login</button>
     </div>
 
-    <!-- Блок админки (появится после логина) -->
-    <div id="admin-block" style="display:none;">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;">
-        <h2 style="color:#2f5233;">Upload Apostille PDF</h2>
+    <!-- Блок админки (после логина) -->
+    <div id="admin-block" style="display: none">
+      <div
+        style="
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 15px;
+        "
+      >
+        <h2 style="color: #2f5233">Upload Apostille PDF</h2>
         <button class="btn btn-secondary" id="logout-btn">Logout</button>
       </div>
 
       <label for="apostille-number">Apostille Number</label>
-      <input type="text" id="apostille-number" placeholder="APO-XXXX-XXXX">
+      <input
+        type="text"
+        id="apostille-number"
+        placeholder="APO-XXXX-XXXX"
+      />
 
       <label for="sticker-number">Sticker Number</label>
-      <input type="text" id="sticker-number" placeholder="Sticker number">
+      <input type="text" id="sticker-number" placeholder="Sticker number" />
 
       <label for="pdf-file">PDF file</label>
-      <input type="file" id="pdf-file" accept="application/pdf">
+      <input type="file" id="pdf-file" accept="application/pdf" />
 
-      <button class="btn btn-main" id="upload-btn" style="margin-top:10px;">Upload PDF</button>
+      <button class="btn btn-main" id="upload-btn" style="margin-top: 10px">
+        Upload PDF
+      </button>
 
-      <h3 style="margin:25px 0 10px;color:#2f5233;">Uploaded documents</h3>
+      <h3 style="margin: 25px 0 10px; color: #2f5233">Uploaded documents</h3>
       <div id="file-list" class="file-grid"></div>
     </div>
   </main>
 
-  <!-- Supabase + логика -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script>
-    const SUPABASE_URL = 'https://frfbftfyoujcqbidaiji.supabase.co';
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZyZmJmdGZ5b3VqY3FiaWRhaWppIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ3NjA1NDksImV4cCI6MjA4MDMzNjU0OX0.uGAY7_ezLWDjcrxDAcPSraBcIqas6dEgOTTXAsRzdJg';
+  <!-- ВЕСЬ JS КОД НИЖЕ -->
+  <script type="module">
+    import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-    const { createClient } = supabase;
+    // 🔹 ВСТАВЬ СЮДА СВОИ ДАННЫЕ ИЗ Supabase → Project Settings → API
+    const SUPABASE_URL = "https://frfbftfyoujcqbidaiji.supabase.co";
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZyZmJmdGZ5b3VqY3FiaWRhaWppIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ3NjA1NDksImV4cCI6MjA4MDMzNjU0OX0.uGAY7_ezLWDjcrxDAcPSraBcIqas6dEgOTTXAsRzdJg";
+
     const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    const loginBlock = document.getElementById('login-block');
-    const adminBlock = document.getElementById('admin-block');
-    const fileList   = document.getElementById('file-list');
+    const loginBlock = document.getElementById("login-block");
+    const adminBlock = document.getElementById("admin-block");
+    const fileList = document.getElementById("file-list");
+    const loginBtn = document.getElementById("login-btn");
+    const logoutBtn = document.getElementById("logout-btn");
+    const uploadBtn = document.getElementById("upload-btn");
 
     async function checkSession() {
-      const { data: { session } } = await db.auth.getSession();
+      const {
+        data: { session },
+      } = await db.auth.getSession();
+
       if (session) {
-        loginBlock.style.display = 'none';
-        adminBlock.style.display = 'block';
+        loginBlock.style.display = "none";
+        adminBlock.style.display = "block";
         loadFiles();
       } else {
-        loginBlock.style.display = 'block';
-        adminBlock.style.display = 'none';
+        loginBlock.style.display = "block";
+        adminBlock.style.display = "none";
       }
     }
 
-    // Логин
-    document.getElementById('login-btn').addEventListener('click', async () => {
-      const email = document.getElementById('admin-email').value.trim();
-      const password = document.getElementById('admin-password').value.trim();
+    // 🔐 ЛОГИН
+    loginBtn.addEventListener("click", async () => {
+      const email = document.getElementById("admin-email").value.trim();
+      const password = document
+        .getElementById("admin-password")
+        .value.trim();
 
       if (!email || !password) {
-        alert('Enter email and password');
+        alert("Enter email and password");
         return;
       }
 
-      const { error } = await db.auth.signInWithPassword({ email, password });
+      const { data, error } = await db.auth.signInWithPassword({
+        email,
+        password,
+      });
+
       if (error) {
-        alert('Login error: ' + error.message);
-      } else {
-        await checkSession();
+        console.error("Login error:", error);
+        alert("Login error: " + error.message);
+        return;
       }
+
+      alert("Logged in as " + data.user.email);
+      checkSession();
     });
 
-    // Logout
-    document.getElementById('logout-btn').addEventListener('click', async () => {
+    // 🚪 LOGOUT
+    logoutBtn.addEventListener("click", async () => {
       await db.auth.signOut();
       await checkSession();
     });
 
-    // Загрузка PDF
-    document.getElementById('upload-btn').addEventListener('click', async () => {
-      const apostille = document.getElementById('apostille-number').value.trim();
-      const sticker   = document.getElementById('sticker-number').value.trim();
-      const fileInput = document.getElementById('pdf-file');
-      const file      = fileInput.files[0];
+    // ⬆️ ЗАГРУЗКА PDF
+    uploadBtn.addEventListener("click", async () => {
+      const apostille = document
+        .getElementById("apostille-number")
+        .value.trim();
+      const sticker = document
+        .getElementById("sticker-number")
+        .value.trim();
+      const fileInput = document.getElementById("pdf-file");
+      const file = fileInput.files[0];
 
       if (!apostille || !sticker || !file) {
-        alert('Fill all fields and choose PDF');
+        alert("Fill all fields and choose PDF");
         return;
       }
 
       const filePath = `${Date.now()}_${file.name}`;
 
-      // 1) Загружаем файл в Storage
-      const { data: uploadData, error: uploadError } = await db
-        .storage
-        .from('apostilles')
+      const { data: uploadData, error: uploadError } = await db.storage
+        .from("apostilles")
         .upload(filePath, file);
 
       if (uploadError) {
-        alert('Upload error: ' + uploadError.message);
+        console.error("Upload error:", uploadError);
+        alert("Upload error: " + uploadError.message);
         return;
       }
 
-      // 2) Получаем публичный URL
-      const { data: publicData } = db
-        .storage
-        .from('apostilles')
-        .getPublicUrl(filePath);
-
-      const publicUrl = publicData.publicUrl;
-
-      // 3) Сохраняем запись в таблицу
-      const { error: dbError } = await db
-        .from('apostilles')
-        .insert({
-          apostille_number: apostille,
-          sticker_number: sticker,
-          file_path: filePath // можем хранить путь, а не URL
-        });
+      const { error: dbError } = await db.from("apostilles").insert({
+        apostille_number: apostille,
+        sticker_number: sticker,
+        file_path: filePath,
+      });
 
       if (dbError) {
-        alert('DB error: ' + dbError.message);
+        console.error("DB error:", dbError);
+        alert("DB error: " + dbError.message);
         return;
       }
 
-      alert('File uploaded');
-      fileInput.value = '';
-      document.getElementById('apostille-number').value = '';
-      document.getElementById('sticker-number').value = '';
+      alert("File uploaded");
+      fileInput.value = "";
+      document.getElementById("apostille-number").value = "";
+      document.getElementById("sticker-number").value = "";
       loadFiles();
     });
 
-    // Подгрузка списка файлов
+    // 📄 ЗАГРУЗКА СПИСКА ФАЙЛОВ
     async function loadFiles() {
-      fileList.innerHTML = 'Loading...';
+      fileList.innerHTML = "Loading...";
 
       const { data, error } = await db
-        .from('apostilles')
-        .select('*')
-        .order('created_at', { ascending: false });
+        .from("apostilles")
+        .select("*")
+        .order("created_at", { ascending: false });
 
       if (error) {
-        fileList.innerHTML = 'Error loading list';
+        console.error("Load error:", error);
+        fileList.innerHTML = "Error loading list";
         return;
       }
 
       if (!data || data.length === 0) {
-        fileList.innerHTML = '<p>No documents uploaded yet.</p>';
+        fileList.innerHTML = "<p>No documents uploaded yet.</p>";
         return;
       }
 
-      fileList.innerHTML = '';
-      data.forEach(row => {
-        const card = document.createElement('div');
-        card.className = 'file-card';
-        const { data: publicData } = db
-          .storage
-          .from('apostilles')
+      fileList.innerHTML = "";
+      data.forEach((row) => {
+        const card = document.createElement("div");
+        card.className = "file-card";
+
+        const { data: publicData } = db.storage
+          .from("apostilles")
           .getPublicUrl(row.file_path);
         const url = publicData.publicUrl;
 
@@ -199,7 +221,6 @@
     checkSession();
   </script>
 
-  <!-- Немного доп. стилей для плиток -->
   <style>
     .file-grid {
       display: grid;
@@ -211,10 +232,9 @@
       background: #ffffff;
       padding: 12px 14px;
       border-radius: 12px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
       font-size: 14px;
     }
   </style>
-
 </body>
 </html>

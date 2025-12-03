@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Panel – Apostille</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <header class="header">
+    <div class="header-container">
+      <div class="header-text">
+        <h1>Apostille Admin Panel</h1>
+      </div>
+    </div>
+  </header>
+
+  <main class="content" style="max-width: 600px;">
+    <!-- Блок логина -->
+    <div id="login-block">
+      <h2 style="margin-bottom:15px;color:#2f5233;">Admin login</h2>
+
+      <label for="admin-email">Email</label>
+      <input type="email" id="admin-email" placeholder="admin@example.com">
+
+      <label for="admin-password">Password</label>
+      <input type="password" id="admin-password" placeholder="Enter password">
+
+      <button class="btn btn-main" id="login-btn">Login</button>
+    </div>
+
+    <!-- Блок админки (появится после логина) -->
+    <div id="admin-block" style="display:none;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;">
+        <h2 style="color:#2f5233;">Upload Apostille PDF</h2>
+        <button class="btn btn-secondary" id="logout-btn">Logout</button>
+      </div>
+
+      <label for="apostille-number">Apostille Number</label>
+      <input type="text" id="apostille-number" placeholder="APO-XXXX-XXXX">
+
+      <label for="sticker-number">Sticker Number</label>
+      <input type="text" id="sticker-number" placeholder="Sticker number">
+
+      <label for="pdf-file">PDF file</label>
+      <input type="file" id="pdf-file" accept="application/pdf">
+
+      <button class="btn btn-main" id="upload-btn" style="margin-top:10px;">Upload PDF</button>
+
+      <h3 style="margin:25px 0 10px;color:#2f5233;">Uploaded documents</h3>
+      <div id="file-list" class="file-grid"></div>
+    </div>
+  </main>
+
+  <!-- Supabase + логика -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    const SUPABASE_URL = 'YOUR_SUPABASE_URL';
+    const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';
+
+    const { createClient } = supabase;
+    const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    const loginBlock = document.getElementById('login-block');
+    const adminBlock = document.getElementById('admin-block');
+    const fileList   = document.getElementById('file-list');
+
+    async function checkSession() {
+      const { data: { session } } = await db.auth.getSession();
+      if (session) {
+        loginBlock.style.display = 'none';
+        adminBlock.style.display = 'block';
+        loadFiles();
+      } else {
+        loginBlock.style.display = 'block';
+        adminBlock.style.display = 'none';
+      }
+    }
+
+    // Логин
+    document.getElementById('login-btn').addEventListener('click', async () => {
+      const email = document.getElementById('admin-email').value.trim();
+      const password = document.getElementById('admin-password').value.trim();
+
+      if (!email || !password) {
+        alert('Enter email and password');
+        return;
+      }
+
+      const { error } = await db.auth.signInWithPassword({ email, password });
+      if (error) {
+        alert('Login error: ' + error.message);
+      } else {
+        await checkSession();
+      }
+    });
+
+    // Logout
+    document.getElementById('logout-btn').addEventListener('click', async () => {
+      await db.auth.signOut();
+      await checkSession();
+    });
+
+    // Загрузка PDF
+    document.getElementById('upload-btn').addEventListener('click', async () => {
+      const apostille = document.getElementById('apostille-number').value.trim();
+      const sticker   = document.getElementById('sticker-number').value.trim();
+      const fileInput = document.getElementById('pdf-file');
+      const file      = fileInput.files[0];
+
+      if (!apostille || !sticker || !file) {
+        alert('Fill all fields and choose PDF');
+        return;
+      }
+
+      const filePath = `${Date.now()}_${file.name}`;
+
+      // 1) Загружаем файл в Storage
+      const { data: uploadData, error: uploadError } = await db
+        .storage
+        .from('apostilles')
+        .upload(filePath, file);
+
+      if (uploadError) {
+        alert('Upload error: ' + uploadError.message);
+        return;
+      }
+
+      // 2) Получаем публичный URL
+      const { data: publicData } = db
+        .storage
+        .from('apostilles')
+        .getPublicUrl(filePath);
+
+      const publicUrl = publicData.publicUrl;
+
+      // 3) Сохраняем запись в таблицу
+      const { error: dbError } = await db
+        .from('apostilles')
+        .insert({
+          apostille_number: apostille,
+          sticker_number: sticker,
+          file_path: filePath // можем хранить путь, а не URL
+        });
+
+      if (dbError) {
+        alert('DB error: ' + dbError.message);
+        return;
+      }
+
+      alert('File uploaded');
+      fileInput.value = '';
+      document.getElementById('apostille-number').value = '';
+      document.getElementById('sticker-number').value = '';
+      loadFiles();
+    });
+
+    // Подгрузка списка файлов
+    async function loadFiles() {
+      fileList.innerHTML = 'Loading...';
+
+      const { data, error } = await db
+        .from('apostilles')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        fileList.innerHTML = 'Error loading list';
+        return;
+      }
+
+      if (!data || data.length === 0) {
+        fileList.innerHTML = '<p>No documents uploaded yet.</p>';
+        return;
+      }
+
+      fileList.innerHTML = '';
+      data.forEach(row => {
+        const card = document.createElement('div');
+        card.className = 'file-card';
+        const { data: publicData } = db
+          .storage
+          .from('apostilles')
+          .getPublicUrl(row.file_path);
+        const url = publicData.publicUrl;
+
+        card.innerHTML = `
+          <strong>Apostille:</strong> ${row.apostille_number}<br>
+          <strong>Sticker:</strong> ${row.sticker_number}<br>
+          <a href="${url}" target="_blank" class="samples-link" style="display:inline-block;margin-top:8px;">
+            Open PDF
+          </a>
+        `;
+        fileList.appendChild(card);
+      });
+    }
+
+    checkSession();
+  </script>
+
+  <!-- Немного доп. стилей для плиток -->
+  <style>
+    .file-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 15px;
+      margin-top: 10px;
+    }
+    .file-card {
+      background: #ffffff;
+      padding: 12px 14px;
+      border-radius: 12px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+      font-size: 14px;
+    }
+  </style>
+
+</body>
+</html>

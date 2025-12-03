@@ -33,7 +33,59 @@
     <a href="index.html" class="btn btn-secondary">Upload your Postal</a>
 </form>
     </main>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  const SUPABASE_URL = 'YOUR_SUPABASE_URL';
+  const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';
 
+  const { createClient } = supabase;
+  const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  const form = document.querySelector('.verification-form');
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const apostille = document.getElementById('apostille-number').value.trim();
+    const sticker   = document.getElementById('sticker-number').value.trim();
+
+    if (!apostille || !sticker) {
+      alert('Please enter both Apostille Number and Sticker Number');
+      return;
+    }
+
+    // Ищем запись в базе
+    const { data, error } = await db
+      .from('apostilles')
+      .select('*')
+      .eq('apostille_number', apostille)
+      .eq('sticker_number', sticker)
+      .maybeSingle();
+
+    if (error) {
+      console.error(error);
+      alert('Error while searching. Try again.');
+      return;
+    }
+
+    if (!data) {
+      alert('No document found for this combination.');
+      return;
+    }
+
+    // Получаем ссылку на файл
+    const { data: publicData } = db
+      .storage
+      .from('apostilles')
+      .getPublicUrl(data.file_path);
+
+    const url = publicData.publicUrl;
+
+    // Открываем PDF
+    window.open(url, '_blank');
+  });
+</script>
 </body>
 </html>
+
 

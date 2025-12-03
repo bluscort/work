@@ -1,43 +1,101 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Apostille Verified</title>
-  <link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Apostille Verified</title>
+    <link rel="stylesheet" href="style.css">
 </head>
-<body class="verified-page">
-  <div class="verified-container">
-    <h1>Apostille verified</h1>
-    <table class="verified-table">
-      <tr>
-        <td><strong>Apostille number</strong></td>
-        <td>APO-OZZ1-1PF2-3Q1L-9ZXF</td>
-      </tr>
-      <tr>
-        <td><strong>Date of issue</strong></td>
-        <td>29 August 2025</td>
-      </tr>
-      <tr>
-        <td><strong>Has been signed by</strong></td>
-        <td>Barry Kay Holland</td>
-      </tr>
-      <tr>
-        <td><strong>Acting in the capacity of</strong></td>
-        <td>Notary Public</td>
-      </tr>
-      <tr>
-        <td><strong>Bears the stamp / seal of</strong></td>
-        <td>The Said Notary Public</td>
-      </tr>
-      <tr>
-        <td><strong>Issued by</strong></td>
-        <td>G. Sahdev</td>
-      </tr>
-    </table>
 
-    <a href="about.html" class="back-btn">← Back to Verification</a>
-  </div>
+<body>
+
+<header class="header">
+    <div class="header-container">
+        <div class="header-text">
+            <h1>Apostille Verified</h1>
+        </div>
+    </div>
+</header>
+
+<main class="verified-content">
+    <div class="verified-box">
+        <h2>Apostille verified</h2>
+
+        <table class="apostille-table">
+            <tr>
+                <th>Apostille number</th>
+                <td id="apostille_field"></td>
+            </tr>
+            <tr>
+                <th>Sticker number</th>
+                <td id="sticker_field"></td>
+            </tr>
+            <tr>
+                <th>Date of issue</th>
+                <td id="date_field"></td>
+            </tr>
+            <tr>
+                <th>File name</th>
+                <td id="file_field"></td>
+            </tr>
+        </table>
+
+        <a href="about.html" class="back-btn">← Back to Verification</a>
+    </div>
+</main>
+
+
+<!-- ====================== -->
+<!-- SUPABASE LOGIC -->
+<!-- ====================== -->
+
+<script type="module">
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+// 🔹 YOUR VALUES
+const SUPABASE_URL = "https://frfbftfyoujcqbidaiji.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZyZmJmdGZ5b3VqY3FiaWRhaWppIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ3NjA1NDksImV4cCI6MjA4MDMzNjU0OX0.uGAY7_ezLWDjcrxDAcPSraBcIqas6dEgOTTXAsRzdJg";
+
+const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// 1️⃣ Read URL parameters
+const params = new URLSearchParams(window.location.search);
+const apostille = params.get("apostille");
+const sticker = params.get("sticker");
+
+// If page opened without params → do nothing
+if (!apostille || !sticker) {
+    document.querySelector(".verified-box").innerHTML =
+        "<p>No verification request provided.</p>";
+} else {
+    loadRecord();
+}
+
+
+// 2️⃣ Load record from Supabase
+async function loadRecord() {
+    const { data, error } = await db
+        .from("apostilles")
+        .select("*")
+        .eq("apostille_number", apostille)
+        .eq("sticker_number", sticker)
+        .maybeSingle();
+
+    if (!data) {
+        document.querySelector(".verified-box").innerHTML =
+            "<p>Record not found.</p>";
+        return;
+    }
+
+    // 3️⃣ Fill table fields
+    document.getElementById("apostille_field").textContent = data.apostille_number;
+    document.getElementById("sticker_field").textContent = data.sticker_number;
+    document.getElementById("date_field").textContent =
+        data.created_at ? data.created_at.slice(0, 10) : "N/A";
+    document.getElementById("file_field").textContent = data.file_path;
+}
+</script>
+
 </body>
 </html>
 

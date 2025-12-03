@@ -6,86 +6,95 @@
     <title>Apostille Verification System</title>
     <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
 
-    <header class="header">
-        <div class="header-container">
-            <img src="https://upload.wikimedia.org/wikipedia/ru/1/19/Kraken_logo.jpeg" alt="Logo" class="logo">
-            <div class="header-text">
-                <h1>Legalization / Apostille Verification System</h1>
-            </div>
+<header class="header">
+    <div class="header-container">
+        <div class="header-text">
+            <h1>Legalization / Apostille Verification System</h1>
         </div>
-    </header>
+    </div>
+</header>
 
-    <main class="content">
-       <form class="verification-form">
-    <label for="apostille-number">Legalization / Apostille Number</label>
-    <input type="text" id="apostille-number" placeholder="Enter number">
+<main class="content">
+    <form class="verification-form">
+        <label for="apostille-number">Legalization / Apostille Number</label>
+        <input type="text" id="apostille-number" placeholder="Enter number">
 
-    <label for="sticker-number">Sticker Number</label>
-    <input type="text" id="sticker-number" placeholder="Enter number">
+        <label for="sticker-number">Sticker Number</label>
+        <input type="text" id="sticker-number" placeholder="Enter number">
 
-    <button type="submit" class="btn btn-main">Manual Verification</button>
+        <button type="submit" class="btn btn-main">Manual Verification</button>
 
-    <a href="#" class="samples-link">View the samples</a>
+        <a href="#" class="samples-link">View the samples</a>
 
-    <a href="index.html" class="btn btn-secondary">Scan the QR code</a>
-    <a href="index.html" class="btn btn-secondary">Upload your Postal</a>
-</form>
-    </main>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script>
-  const SUPABASE_URL = 'YOUR_SUPABASE_URL';
-  const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';
+        <a href="index.html" class="btn btn-secondary">Scan the QR code</a>
+        <a href="index.html" class="btn btn-secondary">Upload your Postal</a>
+    </form>
+</main>
 
-  const { createClient } = supabase;
-  const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+<!-- ====================== -->
+<!-- SUPABASE CODE STARTS HERE -->
+<!-- ====================== -->
 
-  const form = document.querySelector('.verification-form');
+<script type="module">
+    import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-  form.addEventListener('submit', async (e) => {
-    e.preventDefault();
+    // 🔹 INSERT YOUR OWN VALUES HERE
+    const SUPABASE_URL = "https://frfbftfyoujcqbidaiji.supabase.co";
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZyZmJmdGZ5b3VqY3FiaWRhaWppIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ3NjA1NDksImV4cCI6MjA4MDMzNjU0OX0.uGAY7_ezLWDjcrxDAcPSraBcIqas6dEgOTTXAsRzdJg";
 
-    const apostille = document.getElementById('apostille-number').value.trim();
-    const sticker   = document.getElementById('sticker-number').value.trim();
+    const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    if (!apostille || !sticker) {
-      alert('Please enter both Apostille Number and Sticker Number');
-      return;
-    }
+    const form = document.querySelector(".verification-form");
 
-    // Ищем запись в базе
-    const { data, error } = await db
-      .from('apostilles')
-      .select('*')
-      .eq('apostille_number', apostille)
-      .eq('sticker_number', sticker)
-      .maybeSingle();
+    form.addEventListener("submit", async (e) => {
+        e.preventDefault();
 
-    if (error) {
-      console.error(error);
-      alert('Error while searching. Try again.');
-      return;
-    }
+        const apostille = document.getElementById("apostille-number").value.trim();
+        const sticker = document.getElementById("sticker-number").value.trim();
 
-    if (!data) {
-      alert('No document found for this combination.');
-      return;
-    }
+        if (!apostille || !sticker) {
+            alert("Please enter both fields.");
+            return;
+        }
 
-    // Получаем ссылку на файл
-    const { data: publicData } = db
-      .storage
-      .from('apostilles')
-      .getPublicUrl(data.file_path);
+        // 🔎 1. FIND RECORD IN DATABASE
+        const { data, error } = await db
+            .from("apostilles")
+            .select("*")
+            .eq("apostille_number", apostille)
+            .eq("sticker_number", sticker)
+            .maybeSingle();
 
-    const url = publicData.publicUrl;
+        if (error) {
+            alert("Database error: " + error.message);
+            return;
+        }
 
-    // Открываем PDF
-    window.open(url, '_blank');
-  });
+        if (!data) {
+            alert("No such document found.");
+            return;
+        }
+
+        // 📄 2. GET PUBLIC URL TO THE PDF FILE
+        const { data: fileData } = db
+            .storage
+            .from("apostilles")  // ← Bucket name (важно!)
+            .getPublicUrl(data.file_path);
+
+        const fileUrl = fileData.publicUrl;
+
+        if (!fileUrl) {
+            alert("Could not generate PDF URL.");
+            return;
+        }
+
+        // 🔥 3. OPEN PDF
+        window.open(fileUrl, "_blank");
+    });
 </script>
+
 </body>
 </html>
-
-

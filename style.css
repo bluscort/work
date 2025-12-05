@@ -1,17 +1,17 @@
 /* ===============================
-   GLOBAL STYLES
+   GLOBAL
 =============================== */
 * {
     box-sizing: border-box;
-    font-family: "Arial", sans-serif;
     margin: 0;
     padding: 0;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+        Roboto, "Helvetica Neue", Arial, sans-serif;
 }
 
 body {
-    background: radial-gradient(circle at top left, #f4f3ef, #eae6d8);
-    background-image: url('https://www.transparenttextures.com/patterns/gplay.png');
-    background-size: cover;
+    background-color: #f5f6fa;
+    color: #212529;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -23,111 +23,117 @@ body {
 =============================== */
 .header {
     width: 100%;
-    background: linear-gradient(to right, #0b4f30, #2f7a4d);
-    padding: 15px 0;
-    text-align: center;
-    color: white;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+    background-color: #0b3d91; /* гос-синий */
+    border-bottom: 3px solid #07285c;
+    padding: 14px 16px;
 }
 
 .header-container {
+    max-width: 960px;
+    margin: 0 auto;
     display: flex;
-    flex-direction: column;
     align-items: center;
-    gap: 8px;
+    justify-content: flex-start;
+    gap: 12px;
 }
 
 .logo {
-    width: 60px;
-    height: 60px;
+    width: 40px;
+    height: 40px;
+    border-radius: 4px;
+    object-fit: contain;
 }
 
 .header-text h1 {
     font-size: 18px;
-    font-weight: normal;
-    color: #f5f5dc;
+    font-weight: 600;
+    color: #ffffff;
 }
 
 /* ===============================
-   CONTENT
+   MAIN CARD (about.html)
 =============================== */
 .content {
-    background: rgba(255, 255, 255, 0.9);
-    width: 90%;
-    max-width: 420px;
-    margin-top: 25px;
-    padding: 25px;
-    border-radius: 15px;
-    box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
-    text-align: center;
-    backdrop-filter: blur(5px);
+    background-color: #ffffff;
+    width: 100%;
+    max-width: 480px;
+    margin: 32px auto;
+    padding: 24px 20px;
+    border-radius: 8px;
+    box-shadow: 0 1px 4px rgba(15, 23, 42, 0.08);
 }
 
 .verification-form {
     display: flex;
     flex-direction: column;
-    gap: 15px;
+    gap: 14px;
 }
 
 label {
     font-size: 14px;
-    text-align: left;
-    color: #2f5233;
-    font-weight: bold;
+    font-weight: 500;
+    color: #212529;
 }
 
 input {
-    padding: 10px;
-    border: 1px solid #b8b692;
-    border-radius: 6px;
-    outline: none;
+    padding: 10px 12px;
+    border-radius: 4px;
+    border: 1px solid #ced4da;
     font-size: 14px;
-    background: #fffef8;
-    transition: border-color 0.3s, box-shadow 0.3s;
+    outline: none;
+    background-color: #ffffff;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 input:focus {
-    border-color: #bfa14a;
-    box-shadow: 0 0 6px rgba(191, 161, 74, 0.5);
+    border-color: #0b3d91;
+    box-shadow: 0 0 0 2px rgba(11, 61, 145, 0.15);
 }
 
 /* ===============================
    BUTTONS
 =============================== */
 .btn {
-    padding: 12px;
+    display: inline-block;
+    text-align: center;
+    padding: 10px 14px;
+    border-radius: 4px;
     border: none;
-    border-radius: 25px;
-    color: white;
     cursor: pointer;
-    font-size: 15px;
-    font-weight: bold;
-    transition: transform 0.2s, box-shadow 0.2s;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
-}
-
-.btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.25);
+    font-size: 14px;
+    font-weight: 500;
+    text-decoration: none;
+    transition: background-color 0.15s ease, border-color 0.15s ease,
+        color 0.15s ease, box-shadow 0.15s ease;
 }
 
 .btn-main {
-    background: linear-gradient(145deg, #d4af37, #b9971e);
-    color: #fff;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+    background-color: #0b3d91;
+    color: #ffffff;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.16);
+}
+
+.btn-main:hover {
+    background-color: #07285c;
 }
 
 .btn-secondary {
-    background: linear-gradient(145deg, #3a7a44, #4ea75c);
-    color: #fff8dc;
+    background-color: #e9ecef;
+    color: #212529;
+    box-shadow: none;
+    border: 1px solid #ced4da;
+}
+
+.btn-secondary:hover {
+    background-color: #dde1e5;
+    border-color: #b5bcc5;
 }
 
 .samples-link {
     font-size: 13px;
-    color: #2e7031;
+    color: #0b3d91;
     text-decoration: none;
-    margin: 10px 0;
-    font-weight: bold;
+    margin: 4px 0 10px;
 }
 
 .samples-link:hover {
@@ -135,125 +141,120 @@ input:focus {
 }
 
 /* ===============================
-   VERIFIED PAGE
+   VERIFIED PAGE (index.html)
 =============================== */
 .verified-content {
+    width: 100%;
+    max-width: 720px;
+    margin: 32px auto;
     display: flex;
     justify-content: center;
-    align-items: center;
-    height: 70vh;
+    padding: 0 16px;
 }
 
 .verified-box {
-    background: rgba(255, 255, 255, 0.92);
-    padding: 40px 30px;
-    border-radius: 15px;
-    box-shadow: 0 0 25px rgba(0, 0, 0, 0.1);
-    text-align: center;
-    max-width: 420px;
-    border-top: 6px solid #3e8e41;
-    backdrop-filter: blur(6px);
+    background-color: #ffffff;
+    width: 100%;
+    padding: 24px 20px;
+    border-radius: 8px;
+    box-shadow: 0 1px 4px rgba(15, 23, 42, 0.08);
+    border-top: 4px solid #0b3d91;
 }
 
 .verified-box h2 {
-    font-size: 24px;
-    color: #2e7031;
-    margin-bottom: 15px;
-    border-bottom: 3px solid #bfa14a;
-    display: inline-block;
-    padding-bottom: 5px;
+    font-size: 20px;
+    font-weight: 600;
+    color: #0b3d91;
+    margin-bottom: 16px;
 }
 
 .verified-box p {
-    font-size: 15px;
-    color: #3a3a3a;
+    font-size: 14px;
+    color: #495057;
 }
 
-/* ===============================
-   TABLE STYLE
-=============================== */
+/* Таблица результата */
 .apostille-table {
     width: 100%;
     border-collapse: collapse;
-    margin-top: 20px;
+    margin: 10px 0 20px;
+    font-size: 14px;
 }
 
 .apostille-table th,
 .apostille-table td {
-    text-align: left;
     padding: 10px 12px;
-    border-bottom: 1px solid #e3e7ee;
+    border-bottom: 1px solid #e5e7eb;
+    text-align: left;
+    vertical-align: top;
 }
 
 .apostille-table th {
-    font-weight: bold;
-    color: #244b2b;
-    width: 45%;
-    background: #f2f7f3;
+    width: 40%;
+    font-weight: 600;
+    background-color: #f1f3f5;
+    color: #212529;
 }
 
 .apostille-table td {
-    color: #333;
+    color: #343a40;
 }
 
-/* ===== Verified Page ===== */
-body.verified-page {
-  background: linear-gradient(135deg, #0a3d0a 0%, #145214 50%, #d4af37 100%);
-  color: #fff;
-  font-family: "Segoe UI", sans-serif;
-  margin: 0;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100vh;
-}
-
-.verified-container {
-  background: rgba(255, 255, 255, 0.1);
-  padding: 40px 60px;
-  border-radius: 15px;
-  box-shadow: 0 0 25px rgba(0, 0, 0, 0.3);
-  text-align: center;
-  backdrop-filter: blur(10px);
-}
-
-.verified-container h1 {
-  color: #ffd700;
-  font-size: 2em;
-  margin-bottom: 25px;
-}
-
-.verified-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-bottom: 35px;
-}
-
-.verified-table td {
-  padding: 10px 20px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-  text-align: left;
-  color: #fff;
-}
-
-.verified-table strong {
-  color: #ffd700;
-}
-
+/* Кнопка "Back to Verification" */
 .back-btn {
-  display: inline-block;
-  background: linear-gradient(145deg, #b8860b, #daa520, #ffd700);
-  color: #fff;
-  padding: 12px 28px;
-  border-radius: 8px;
-  font-weight: bold;
-  text-decoration: none;
-  transition: transform 0.2s, box-shadow 0.2s;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+    display: inline-block;
+    margin-top: 16px;
+    padding: 8px 14px;
+    border-radius: 4px;
+    border: 1px solid #0b3d91;
+    color: #0b3d91;
+    font-size: 14px;
+    font-weight: 500;
+    text-decoration: none;
+    background-color: #ffffff;
+    transition: background-color 0.15s ease, color 0.15s ease,
+        border-color 0.15s ease;
 }
 
 .back-btn:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 6px 15px rgba(255, 215, 0, 0.6);
+    background-color: #0b3d91;
+    color: #ffffff;
 }
 
+/* ===============================
+   ADMIN PAGE GRID (admin.html)
+=============================== */
+.file-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+    gap: 12px;
+    margin-top: 12px;
+}
+
+.file-card {
+    background-color: #ffffff;
+    border-radius: 6px;
+    padding: 10px 12px;
+    border: 1px solid #e5e7eb;
+    font-size: 13px;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+}
+
+/* ===============================
+   RESPONSIVE
+=============================== */
+@media (max-width: 600px) {
+    .header-container {
+        justify-content: center;
+        text-align: center;
+    }
+
+    .content {
+        margin: 20px 12px;
+        padding: 20px 16px;
+    }
+
+    .verified-content {
+        margin: 20px 12px;
+    }
+}

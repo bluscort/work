@@ -1,12 +1,22 @@
 /* ===============================
    GLOBAL
 =============================== */
-* {
+*,
+*::before,
+*::after {
     box-sizing: border-box;
+}
+
+* {
     margin: 0;
     padding: 0;
     font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
         Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+html {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
 }
 
 body {
@@ -15,7 +25,28 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
+
+    /* ✅ Safari fix: 100vh can be wrong; keep fallback + modern unit */
     min-height: 100vh;
+    min-height: 100dvh;
+
+    /* ✅ Better font rendering on macOS */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+
+    /* ✅ Prevent horizontal scroll from rounding/layout quirks */
+    overflow-x: hidden;
+
+    /* ✅ Safe area padding for iOS/macOS Safari (harmless elsewhere) */
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+}
+
+/* Make tappable/clickable elements more responsive */
+a,
+button {
+    cursor: pointer;
+    touch-action: manipulation;
 }
 
 /* ===============================
@@ -26,6 +57,9 @@ body {
     background-color: #0b3d91; /* гос-синий */
     border-bottom: 3px solid #07285c;
     padding: 14px 16px;
+
+    /* ✅ Safe area top for Safari (iOS, but ok everywhere) */
+    padding-top: calc(14px + env(safe-area-inset-top));
 }
 
 .header-container {
@@ -75,7 +109,18 @@ label {
     color: #212529;
 }
 
+/* ✅ Safari/macOS form normalization */
+input,
+button,
+select,
+textarea {
+    -webkit-appearance: none;
+    appearance: none;
+    font-family: inherit;
+}
+
 input {
+    width: 100%;
     padding: 10px 12px;
     border-radius: 4px;
     border: 1px solid #ced4da;
@@ -83,6 +128,9 @@ input {
     outline: none;
     background-color: #ffffff;
     transition: border-color 0.2s ease, box-shadow 0.2s ease;
+
+    /* ✅ Avoid iOS zoom on focus (keeps >=16px only if you want; but we keep 14 for design)
+       If you ever see zoom on iPhone, bump font-size to 16px for mobile via media query */
 }
 
 input:focus {
@@ -105,6 +153,19 @@ input:focus {
     text-decoration: none;
     transition: background-color 0.15s ease, border-color 0.15s ease,
         color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.btn:focus {
+    outline: none;
+}
+
+/* ✅ Keyboard focus visible (better accessibility, also stable on Safari) */
+.btn:focus-visible,
+.back-btn:focus-visible,
+input:focus-visible,
+a:focus-visible {
+    outline: 2px solid rgba(11, 61, 145, 0.35);
+    outline-offset: 2px;
 }
 
 .btn-main {
@@ -159,6 +220,10 @@ input:focus {
     border-radius: 8px;
     box-shadow: 0 1px 4px rgba(15, 23, 42, 0.08);
     border-top: 4px solid #0b3d91;
+
+    /* ✅ Prevent long strings from breaking layout (Safari sometimes worse here) */
+    overflow-wrap: anywhere;
+    word-break: break-word;
 }
 
 .verified-box h2 {
@@ -257,4 +322,8 @@ input:focus {
     .verified-content {
         margin: 20px 12px;
     }
+
+    /* ✅ If you ever see iPhone Safari zooming input on focus, uncomment:
+    input { font-size: 16px; }
+    */
 }

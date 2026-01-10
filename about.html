@@ -1,281 +1,127 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>Apostille Admin Panel</title>
-  <link rel="stylesheet" href="style.css" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Apostille Verification System</title>
+    <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
-  <header class="header">
+
+<header class="header">
     <div class="header-container">
-      <div class="header-text">
-        <h1>Apostille Admin Panel</h1>
-      </div>
+        <div class="header-text">
+            <h1>Legalization / Apostille Verification System</h1>
+        </div>
     </div>
-  </header>
+</header>
 
-  <main class="content" style="max-width: 600px">
-    <!-- Блок логина -->
-    <div id="login-block">
-      <h2 style="margin-bottom: 15px; color: #2f5233">Admin login</h2>
+<main class="content">
+    <form class="verification-form">
+        <label for="apostille-number">Legalization / Apostille Number</label>
+        <input type="text" id="apostille-number" placeholder="Enter number">
 
-      <label for="admin-email">Email</label>
-      <input type="email" id="admin-email" placeholder="admin@example.com" autocomplete="username" />
+        <label for="sticker-number">Sticker Number</label>
+        <input type="text" id="sticker-number" placeholder="Enter number">
 
-      <label for="admin-password">Password</label>
-      <input type="password" id="admin-password" placeholder="Enter password" autocomplete="current-password" />
+        <button type="submit" class="btn btn-main">Manual Verification</button>
 
-      <button class="btn btn-main" id="login-btn" type="button">Login</button>
-    </div>
+        <a href="#" class="samples-link">View the samples</a>
 
-    <!-- Блок админки (после логина) -->
-    <div id="admin-block" style="display: none">
-      <div
-        style="
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          margin-bottom: 15px;
-        "
-      >
-        <h2 style="color: #2f5233">Upload Apostille PDF</h2>
-        <button class="btn btn-secondary" id="logout-btn" type="button">Logout</button>
-      </div>
+        <a href="index.html" class="btn btn-secondary">Scan the QR code</a>
+        <a href="index.html" class="btn btn-secondary">Upload your Postal</a>
+    </form>
+</main>
 
-      <label for="apostille-number">Apostille Number</label>
-      <input
-        type="text"
-        id="apostille-number"
-        placeholder="APO-XXXX-XXXX"
-      />
 
-      <label for="sticker-number">Sticker Number</label>
-      <input type="text" id="sticker-number" placeholder="Sticker number" />
+<!-- ====================== -->
+<!-- SUPABASE LOGIC -->
+<!-- ====================== -->
 
-      <label for="pdf-file">PDF file</label>
-      <input type="file" id="pdf-file" accept="application/pdf" />
+<script type="module">
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-      <button class="btn btn-main" id="upload-btn" type="button" style="margin-top: 10px">
-        Upload PDF
-      </button>
+// ✅ INSERT YOUR VALUES
+const SUPABASE_URL = "https://frfbftfyoujcqbidaiji.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZyZmJmdGZ5b3VqY3FiaWRhaWppIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ3NjA1NDksImV4cCI6MjA4MDMzNjU0OX0.uGAY7_ezLWDjcrxDAcPSraBcIqas6dEgOTTXAsRzdJg";
 
-      <h3 style="margin: 25px 0 10px; color: #2f5233">Uploaded documents</h3>
-      <div id="file-list" class="file-grid"></div>
-    </div>
-  </main>
+const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-  <script type="module">
-    import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+const form = document.querySelector(".verification-form");
 
-    const SUPABASE_URL = "https://frfbftfyoujcqbidaiji.supabase.co";
-    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZyZmJmdGZ5b3VqY3FiaWRhaWppIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ3NjA1NDksImV4cCI6MjA4MDMzNjU0OX0.uGAY7_ezLWDjcrxDAcPSraBcIqas6dEgOTTXAsRzdJg";
+form.addEventListener("submit", async (e) => {
+    e.preventDefault();
 
-    const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const apostille = document.getElementById("apostille-number").value.trim();
+    const sticker = document.getElementById("sticker-number").value.trim();
 
-    const loginBlock = document.getElementById("login-block");
-    const adminBlock = document.getElementById("admin-block");
-    const fileList = document.getElementById("file-list");
-    const loginBtn = document.getElementById("login-btn");
-    const logoutBtn = document.getElementById("logout-btn");
-    const uploadBtn = document.getElementById("upload-btn");
-
-    function setLoading(btn, isLoading) {
-      if (!btn) return;
-      btn.disabled = isLoading;
-      btn.style.opacity = isLoading ? "0.7" : "1";
-      btn.style.cursor = isLoading ? "not-allowed" : "pointer";
-    }
-
-    function sanitizeFileName(name) {
-      // Убираем пробелы/кириллицу/спецсимволы в имени файла (часто помогает кроссбраузерно)
-      const dot = name.lastIndexOf(".");
-      const base = dot >= 0 ? name.slice(0, dot) : name;
-      const ext = dot >= 0 ? name.slice(dot) : "";
-      const safeBase = base
-        .normalize("NFKD")
-        .replace(/[\u0300-\u036f]/g, "")
-        .replace(/[^a-zA-Z0-9-_]/g, "_")
-        .replace(/_+/g, "_")
-        .slice(0, 60);
-      const safeExt = ext.replace(/[^a-zA-Z0-9.]/g, "");
-      return `${safeBase || "file"}${safeExt || ".pdf"}`;
-    }
-
-    async function checkSession() {
-      const { data, error } = await db.auth.getSession();
-      if (error) {
-        console.error("Session error:", error);
-      }
-
-      const session = data?.session;
-
-      if (session) {
-        loginBlock.style.display = "none";
-        adminBlock.style.display = "block";
-        await loadFiles();
-      } else {
-        loginBlock.style.display = "block";
-        adminBlock.style.display = "none";
-      }
-    }
-
-    // ✅ Более надёжно для Safari/macOS: реагируем на изменения авторизации
-    db.auth.onAuthStateChange((_event, _session) => {
-      checkSession();
-    });
-
-    // 🔐 ЛОГИН
-    loginBtn.addEventListener("click", async () => {
-      const email = document.getElementById("admin-email").value.trim();
-      const password = document.getElementById("admin-password").value.trim();
-
-      if (!email || !password) {
-        alert("Enter email and password");
+    if (!apostille || !sticker) {
+        alert("Please enter both fields.");
         return;
-      }
+    }
 
-      setLoading(loginBtn, true);
-      try {
-        const { data, error } = await db.auth.signInWithPassword({ email, password });
+    // ✅ IMPORTANT FOR SAFARI/macOS:
+    // Open new tab immediately (user gesture), then set URL after await
+    const pdfTab = window.open("", "_blank");
 
-        if (error) {
-          console.error("Login error:", error);
-          alert("Login error: " + error.message);
-          return;
+    try {
+        // 1️⃣ Find in DB
+        const { data, error } = await db
+            .from("apostilles")
+            .select("*")
+            .eq("apostille_number", apostille)
+            .eq("sticker_number", sticker)
+            .maybeSingle();
+
+        if (error) throw error;
+
+        if (!data) {
+            if (pdfTab) pdfTab.close();
+            alert("No such document found.");
+            return;
         }
 
-        alert("Logged in as " + data.user.email);
-        // checkSession вызовется также через onAuthStateChange, но пусть будет безопасно
-        await checkSession();
-      } finally {
-        setLoading(loginBtn, false);
-      }
-    });
-
-    // 🚪 LOGOUT
-    logoutBtn.addEventListener("click", async () => {
-      setLoading(logoutBtn, true);
-      try {
-        const { error } = await db.auth.signOut();
-        if (error) console.error("Logout error:", error);
-        await checkSession();
-      } finally {
-        setLoading(logoutBtn, false);
-      }
-    });
-
-    // ⬆️ ЗАГРУЗКА PDF
-    uploadBtn.addEventListener("click", async () => {
-      const apostille = document.getElementById("apostille-number").value.trim();
-      const sticker = document.getElementById("sticker-number").value.trim();
-      const fileInput = document.getElementById("pdf-file");
-      const file = fileInput.files && fileInput.files[0];
-
-      if (!apostille || !sticker || !file) {
-        alert("Fill all fields and choose PDF");
-        return;
-      }
-
-      setLoading(uploadBtn, true);
-      try {
-        const safeName = sanitizeFileName(file.name);
-        const filePath = `${Date.now()}_${safeName}`;
-
-        const { error: uploadError } = await db.storage
-          .from("apostilles")
-          .upload(filePath, file, {
-            contentType: "application/pdf",
-            upsert: false,
-          });
-
-        if (uploadError) {
-          console.error("Upload error:", uploadError);
-          alert("Upload error: " + uploadError.message);
-          return;
+        if (!data.file_path) {
+            if (pdfTab) pdfTab.close();
+            alert("File path is missing for this record.");
+            return;
         }
 
-        const { error: dbError } = await db.from("apostilles").insert({
-          apostille_number: apostille,
-          sticker_number: sticker,
-          file_path: filePath,
-        });
+        // 2️⃣ Get public PDF URL
+        const { data: fileData } = db
+            .storage
+            .from("apostilles")
+            .getPublicUrl(data.file_path);
 
-        if (dbError) {
-          console.error("DB error:", dbError);
-          alert("DB error: " + dbError.message);
-          return;
+        const pdfUrl = fileData?.publicUrl;
+
+        if (!pdfUrl) {
+            if (pdfTab) pdfTab.close();
+            alert("Could not generate the public PDF link.");
+            return;
         }
 
-        alert("File uploaded");
-        fileInput.value = "";
-        document.getElementById("apostille-number").value = "";
-        document.getElementById("sticker-number").value = "";
-        await loadFiles();
-      } finally {
-        setLoading(uploadBtn, false);
-      }
-    });
+        // 3️⃣ Open PDF in new tab (Safari-safe)
+        if (pdfTab) {
+            pdfTab.location.href = pdfUrl;
+            pdfTab.focus();
+        } else {
+            // fallback if browser blocked even the initial open
+            window.location.href = pdfUrl;
+            return;
+        }
 
-    // 📄 ЗАГРУЗКА СПИСКА ФАЙЛОВ
-    async function loadFiles() {
-      fileList.innerHTML = "Loading...";
+        // 4️⃣ Redirect this tab to index.html with parameters
+        window.location.href = `index.html?apostille=${encodeURIComponent(apostille)}&sticker=${encodeURIComponent(sticker)}`;
 
-      const { data, error } = await db
-        .from("apostilles")
-        .select("*")
-        .order("created_at", { ascending: false });
-
-      if (error) {
-        console.error("Load error:", error);
-        fileList.innerHTML = "Error loading list";
-        return;
-      }
-
-      if (!data || data.length === 0) {
-        fileList.innerHTML = "<p>No documents uploaded yet.</p>";
-        return;
-      }
-
-      fileList.innerHTML = "";
-      data.forEach((row) => {
-        const card = document.createElement("div");
-        card.className = "file-card";
-
-        const { data: publicData } = db.storage
-          .from("apostilles")
-          .getPublicUrl(row.file_path);
-
-        const url = publicData?.publicUrl || "#";
-
-        card.innerHTML = `
-          <strong>Apostille:</strong> ${row.apostille_number}<br>
-          <strong>Sticker:</strong> ${row.sticker_number}<br>
-          <a href="${url}" target="_blank" rel="noopener noreferrer" class="samples-link" style="display:inline-block;margin-top:8px;">
-            Open PDF
-          </a>
-        `;
-        fileList.appendChild(card);
-      });
+    } catch (err) {
+        if (pdfTab) pdfTab.close();
+        console.error(err);
+        alert("Verification failed. Please try again.");
     }
+});
+</script>
 
-    checkSession();
-  </script>
-
-  <style>
-    .file-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-      gap: 15px;
-      margin-top: 10px;
-    }
-    .file-card {
-      background: #ffffff;
-      padding: 12px 14px;
-      border-radius: 12px;
-      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
-      font-size: 14px;
-    }
-  </style>
 </body>
 </html>

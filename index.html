@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Apostille Verified</title>
     <link rel="stylesheet" href="style.css">
 </head>
@@ -18,7 +18,7 @@
 </header>
 
 <main class="verified-content">
-    <div class="verified-box">
+    <div class="verified-box" id="verifiedBox">
         <h2>Apostille verified</h2>
 
         <table class="apostille-table">
@@ -40,6 +40,13 @@
             </tr>
         </table>
 
+        <!-- PDF link will appear here after loading -->
+        <div style="margin-top: 14px;">
+            <a id="pdf_link" class="btn btn-main" href="#" target="_blank" rel="noopener noreferrer" style="display:none;">
+                Open PDF
+            </a>
+        </div>
+
         <a href="about.html" class="back-btn">← Back to Verification</a>
     </div>
 </main>
@@ -52,7 +59,6 @@
 <script type="module">
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-// 🔹 YOUR VALUES
 const SUPABASE_URL = "https://frfbftfyoujcqbidaiji.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZyZmJmdGZ5b3VqY3FiaWRhaWppIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ3NjA1NDksImV4cCI6MjA4MDMzNjU0OX0.uGAY7_ezLWDjcrxDAcPSraBcIqas6dEgOTTXAsRzdJg";
 
@@ -60,43 +66,94 @@ const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // 1️⃣ Read URL parameters
 const params = new URLSearchParams(window.location.search);
-const apostille = params.get("apostille");
-const sticker = params.get("sticker");
+const apostille = (params.get("apostille") || "").trim();
+const sticker = (params.get("sticker") || "").trim();
 
-// If page opened without params → do nothing
+const verifiedBox = document.getElementById("verifiedBox");
+
 if (!apostille || !sticker) {
-    document.querySelector(".verified-box").innerHTML =
-        "<p>No verification request provided.</p>";
+    // Avoid breaking the page if opened without params
+    verifiedBox.innerHTML = `
+        <h2>Verification</h2>
+        <p>No verification request provided.</p>
+        <a href="about.html" class="back-btn">← Back to Verification</a>
+    `;
 } else {
     loadRecord();
 }
 
+function formatDateISO(isoString) {
+    if (!isoString) return "N/A";
+    // Display YYYY-MM-DD safely
+    return String(isoString).slice(0, 10);
+}
 
 // 2️⃣ Load record from Supabase
 async function loadRecord() {
-    const { data, error } = await db
-        .from("apostilles")
-        .select("*")
-        .eq("apostille_number", apostille)
-        .eq("sticker_number", sticker)
-        .maybeSingle();
+    try {
+        const { data, error } = await db
+            .from("apostilles")
+            .select("*")
+            .eq("apostille_number", apostille)
+            .eq("sticker_number", sticker)
+            .maybeSingle();
 
-    if (!data) {
-        document.querySelector(".verified-box").innerHTML =
-            "<p>Record not found.</p>";
-        return;
+        if (error) {
+            console.error("Supabase error:", error);
+            verifiedBox.innerHTML = `
+                <h2>Verification</h2>
+                <p>Verification failed. Please try again.</p>
+                <a href="about.html" class="back-btn">← Back to Verification</a>
+            `;
+            return;
+        }
+
+        if (!data) {
+            verifiedBox.innerHTML = `
+                <h2>Verification</h2>
+                <p>Record not found.</p>
+                <a href="about.html" class="back-btn">← Back to Verification</a>
+            `;
+            return;
+        }
+
+        // 3️⃣ Fill table fields
+        const apostilleEl = document.getElementById("apostille_field");
+        const stickerEl = document.getElementById("sticker_field");
+        const dateEl = document.getElementById("date_field");
+        const fileEl = document.getElementById("file_field");
+
+        if (apostilleEl) apostilleEl.textContent = data.apostille_number || "";
+        if (stickerEl) stickerEl.textContent = data.sticker_number || "";
+        if (dateEl) dateEl.textContent = formatDateISO(data.created_at);
+        if (fileEl) fileEl.textContent = data.file_path || "";
+
+        // 4️⃣ Build public PDF link (Safari-friendly: simple anchor)
+        if (data.file_path) {
+            const { data: fileData } = db
+                .storage
+                .from("apostilles")
+                .getPublicUrl(data.file_path);
+
+            const url = fileData?.publicUrl;
+
+            const pdfLink = document.getElementById("pdf_link");
+            if (pdfLink && url) {
+                pdfLink.href = url;
+                pdfLink.style.display = "inline-block";
+            }
+        }
+
+    } catch (e) {
+        console.error("Unexpected error:", e);
+        verifiedBox.innerHTML = `
+            <h2>Verification</h2>
+            <p>Unexpected error. Please try again.</p>
+            <a href="about.html" class="back-btn">← Back to Verification</a>
+        `;
     }
-
-    // 3️⃣ Fill table fields
-    document.getElementById("apostille_field").textContent = data.apostille_number;
-    document.getElementById("sticker_field").textContent = data.sticker_number;
-    document.getElementById("date_field").textContent =
-        data.created_at ? data.created_at.slice(0, 10) : "N/A";
-    document.getElementById("file_field").textContent = data.file_path;
 }
 </script>
 
 </body>
 </html>
-
-

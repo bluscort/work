@@ -1,87 +1,67 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Apostille Verification System</title>
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Apostille Verification System</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
-
 <header class="header">
-    <div class="header-container">
-        <div class="header-text">
-            <h1>Legalization / Apostille Verification System</h1>
-        </div>
+  <div class="header-container">
+    <div class="header-text">
+      <h1>Legalization / Apostille Verification System</h1>
     </div>
+  </div>
 </header>
 
 <main class="content">
-    <form class="verification-form" id="verificationForm">
-        <label for="apostille-number">Legalization / Apostille Number</label>
-        <input
-            type="text"
-            id="apostille-number"
-            placeholder="Enter apostille number"
-            required
-        >
+  <form class="verification-form" id="verificationForm">
+    <label for="apostille-number">Legalization / Apostille Number</label>
+    <input type="text" id="apostille-number" placeholder="Enter apostille number" required>
 
-        <!-- ✅ NEW: Date instead of Sticker -->
-        <label for="issue-date">Date of issue</label>
-        <input
-            type="date"
-            id="issue-date"
-            required
-        >
+    <label for="issue-date">Date of issue</label>
+    <input type="date" id="issue-date" required>
 
-        <!-- ➕ OPTIONAL: Referral code -->
-        <label for="referral-code">Referral code (optional)</label>
-        <input
-            type="text"
-            id="referral-code"
-            placeholder="Enter referral code (if any)"
-        >
+    <label for="referral-code">Referral code (optional)</label>
+    <input type="text" id="referral-code" placeholder="Enter referral code (if any)">
 
-        <button type="submit" class="btn btn-main">
-            Manual Verification
-        </button>
+    <button type="submit" class="btn btn-main">Manual Verification</button>
 
-        <a href="#" class="samples-link">View the samples</a>
+    <a href="#" class="samples-link">View the samples</a>
 
-        <button type="button" id="scan-qr-btn" class="btn btn-secondary">
-            Scan the QR code
-        </button>
+    <button type="button" id="scan-qr-btn" class="btn btn-secondary">Scan the QR code</button>
 
-        <a href="index.html" class="btn btn-secondary">
-            Upload your Postal
-        </a>
-    </form>
+    <a href="index.html" class="btn btn-secondary">Upload your Postal</a>
+  </form>
 </main>
 
 <!-- ======================
-     QR MODAL
+     QR SCANNER MODAL
 ====================== -->
 <div id="qr-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.55); z-index:9999; padding:16px;">
-    <div style="max-width:520px; margin:40px auto; background:#fff; border-radius:12px; padding:14px;">
-        <div style="display:flex; justify-content:space-between; align-items:center;">
-            <strong>Scan QR Code</strong>
-            <button type="button" id="close-qr-btn" class="btn btn-secondary">Close</button>
-        </div>
-
-        <p style="font-size:13px; color:#495057; margin:10px 0;">
-            Point the camera at the QR code
-        </p>
-
-        <div id="qr-reader" style="width:100%;"></div>
-        <p id="qr-status" style="font-size:13px; color:#495057; margin-top:8px;"></p>
+  <div style="max-width:520px; margin:40px auto; background:#fff; border-radius:12px; padding:14px;">
+    <div style="display:flex; justify-content:space-between; align-items:center; gap:10px;">
+      <strong style="font-size:16px;">Scan QR Code</strong>
+      <button type="button" id="close-qr-btn" class="btn btn-secondary" style="padding:8px 12px;">Close</button>
     </div>
+
+    <p style="font-size:13px; color:#495057; margin:10px 0;">
+      Point the camera at the QR code. Camera works only on HTTPS (or localhost).
+    </p>
+
+    <div id="qr-reader" style="width:100%;"></div>
+
+    <p id="qr-status" style="font-size:13px; color:#495057; margin-top:10px;"></p>
+  </div>
 </div>
 
+<!-- ✅ QR library (camera + scanning). Works in Safari/Chrome when HTTPS -->
 <script src="https://unpkg.com/html5-qrcode@2.3.10/html5-qrcode.min.js"></script>
 
 <!-- ======================
-     SUPABASE + LOGIC
+     SUPABASE + QR LOGIC
 ====================== -->
 <script type="module">
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
@@ -96,72 +76,223 @@ const apostilleInput = document.getElementById("apostille-number");
 const dateInput = document.getElementById("issue-date");
 const referralInput = document.getElementById("referral-code");
 
+const scanBtn = document.getElementById("scan-qr-btn");
+const modal = document.getElementById("qr-modal");
+const closeBtn = document.getElementById("close-qr-btn");
+const statusEl = document.getElementById("qr-status");
+
+let qrScanner = null;
+let isScanning = false;
+
 /* ======================
-   MANUAL VERIFICATION
+   Manual Verification
 ====================== */
 form.addEventListener("submit", async (e) => {
-    e.preventDefault();
+  e.preventDefault();
 
-    const apostille = apostilleInput.value.trim();
-    const issueDate = dateInput.value;
-    const referral = referralInput.value.trim(); // optional
+  const apostille = apostilleInput.value.trim();
+  const issueDate = (dateInput.value || "").trim();
+  const referral = referralInput.value.trim();
 
-    if (!apostille || !issueDate) {
-        alert("Please fill in all required fields.");
-        return;
+  if (!apostille || !issueDate) {
+    alert("Please fill in all required fields.");
+    return;
+  }
+
+  // ✅ Safari-safe: open tab immediately (user gesture)
+  const pdfTab = window.open("", "_blank");
+
+  try {
+    const { data, error } = await db
+      .from("apostilles")
+      .select("*")
+      .eq("apostille_number", apostille)
+      .eq("issue_date", issueDate)
+      .maybeSingle();
+
+    if (error) throw error;
+
+    if (!data) {
+      if (pdfTab) pdfTab.close();
+      alert("No document found for the provided data.");
+      return;
     }
 
-    // Safari-safe popup
-    const pdfTab = window.open("", "_blank");
-
-    try {
-        const { data, error } = await db
-            .from("apostilles")
-            .select("*")
-            .eq("apostille_number", apostille)
-            .eq("issue_date", issueDate)
-            .maybeSingle();
-
-        if (error) throw error;
-
-        if (!data) {
-            if (pdfTab) pdfTab.close();
-            alert("No document found for the provided data.");
-            return;
-        }
-
-        const { data: fileData } = db
-            .storage
-            .from("apostilles")
-            .getPublicUrl(data.file_path);
-
-        const pdfUrl = fileData?.publicUrl;
-
-        if (!pdfUrl) {
-            if (pdfTab) pdfTab.close();
-            alert("Document file not available.");
-            return;
-        }
-
-        if (pdfTab) {
-            pdfTab.location.href = pdfUrl;
-            pdfTab.focus();
-        }
-
-        // Referral code можно передавать дальше, если понадобится
-        const params = new URLSearchParams({
-            apostille,
-            date: issueDate
-        });
-        if (referral) params.set("ref", referral);
-
-        window.location.href = `index.html?${params.toString()}`;
-
-    } catch (err) {
-        if (pdfTab) pdfTab.close();
-        console.error(err);
-        alert("Verification failed. Please try again.");
+    if (!data.file_path) {
+      if (pdfTab) pdfTab.close();
+      alert("Document file not available.");
+      return;
     }
+
+    const { data: fileData } = db
+      .storage
+      .from("apostilles")
+      .getPublicUrl(data.file_path);
+
+    const pdfUrl = fileData?.publicUrl;
+    if (!pdfUrl) {
+      if (pdfTab) pdfTab.close();
+      alert("Could not generate the public PDF link.");
+      return;
+    }
+
+    if (pdfTab) {
+      pdfTab.location.href = pdfUrl;
+      pdfTab.focus();
+    }
+
+    // Redirect to result page
+    const params = new URLSearchParams({ apostille, date: issueDate });
+    if (referral) params.set("ref", referral);
+    window.location.href = `index.html?${params.toString()}`;
+
+  } catch (err) {
+    if (pdfTab) pdfTab.close();
+    console.error(err);
+    alert("Verification failed. Please try again.");
+  }
+});
+
+/* ======================
+   QR helpers
+====================== */
+function isHttpsOrLocalhost() {
+  return (
+    location.protocol === "https:" ||
+    location.hostname === "localhost" ||
+    location.hostname === "127.0.0.1"
+  );
+}
+
+function parseQrText(text) {
+  const raw = String(text || "").trim();
+
+  // Format A: Full URL with apostille & date
+  try {
+    if (raw.startsWith("http://") || raw.startsWith("https://")) {
+      const url = new URL(raw);
+      const a = (url.searchParams.get("apostille") || "").trim();
+      const d = (url.searchParams.get("date") || "").trim();
+      if (a && d) return { apostille: a, date: d, url: raw };
+      return { url: raw };
+    }
+  } catch (_) {}
+
+  // Format B: query string "apostille=...&date=..."
+  if (raw.includes("apostille=") && raw.includes("date=")) {
+    const qs = raw.includes("?") ? raw.split("?")[1] : raw;
+    const p = new URLSearchParams(qs);
+    const a = (p.get("apostille") || "").trim();
+    const d = (p.get("date") || "").trim();
+    if (a && d) return { apostille: a, date: d };
+  }
+
+  // Format C: "APO-123|2026-01-10" (or comma)
+  if (raw.includes("|") || raw.includes(",")) {
+    const parts = raw
+      .split(raw.includes("|") ? "|" : ",")
+      .map(x => x.trim())
+      .filter(Boolean);
+    if (parts.length >= 2) return { apostille: parts[0], date: parts[1] };
+  }
+
+  return {};
+}
+
+/* ======================
+   QR Scan (Camera)
+====================== */
+async function startScan() {
+  if (!isHttpsOrLocalhost()) {
+    alert("Camera works only on HTTPS (or localhost). Open the site via HTTPS.");
+    return;
+  }
+
+  if (isScanning) return;
+  isScanning = true;
+
+  modal.style.display = "block";
+  statusEl.textContent = "Starting camera...";
+
+  // recreate container each time to avoid Safari glitches
+  const readerEl = document.getElementById("qr-reader");
+  readerEl.innerHTML = "";
+
+  qrScanner = new Html5Qrcode("qr-reader");
+
+  try {
+    const config = { fps: 10, qrbox: { width: 260, height: 260 } };
+
+    await qrScanner.start(
+      { facingMode: "environment" },
+      config,
+      async (decodedText) => {
+        statusEl.textContent = "QR detected. Processing...";
+
+        const parsed = parseQrText(decodedText);
+
+        // If QR is a URL (but no params) — open it
+        if (parsed.url && !(parsed.apostille && parsed.date)) {
+          await stopScan();
+          window.location.href = parsed.url;
+          return;
+        }
+
+        if (!parsed.apostille || !parsed.date) {
+          statusEl.textContent = "QR read, but format is not recognized. Use apostille+date QR.";
+          return;
+        }
+
+        // Fill inputs
+        apostilleInput.value = parsed.apostille;
+        dateInput.value = parsed.date;
+
+        await stopScan();
+
+        // Auto submit (Safari supports requestSubmit in modern versions)
+        if (form.requestSubmit) {
+          form.requestSubmit();
+        } else {
+          form.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
+        }
+      },
+      () => {
+        // ignore scan errors while scanning
+      }
+    );
+
+    statusEl.textContent = "Camera is on. Point it at the QR code.";
+  } catch (err) {
+    console.error(err);
+    statusEl.textContent =
+      "Camera error. Allow camera permission in browser settings and try again.";
+    isScanning = false;
+  }
+}
+
+async function stopScan() {
+  try {
+    if (qrScanner && qrScanner.isScanning) {
+      await qrScanner.stop();
+    }
+  } catch (_) {}
+
+  try {
+    if (qrScanner) await qrScanner.clear();
+  } catch (_) {}
+
+  qrScanner = null;
+  isScanning = false;
+  modal.style.display = "none";
+  statusEl.textContent = "";
+}
+
+scanBtn.addEventListener("click", startScan);
+closeBtn.addEventListener("click", stopScan);
+
+// close by clicking outside modal card
+modal.addEventListener("click", (e) => {
+  if (e.target === modal) stopScan();
 });
 </script>
 
